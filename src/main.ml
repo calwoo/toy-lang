@@ -26,7 +26,7 @@ let parse_and_print lexbuf =
       (* |> List.map ~f:expr_to_string
          |> String.concat ~sep:" "
          |> print_endline *)
-      |> List.map ~f:(fun e -> eval e 0)
+      |> List.map ~f:(fun e -> eval e empty_env)
       |> List.map ~f:value_to_string
       |> String.concat ~sep:" " |> print_endline
   | None -> ()

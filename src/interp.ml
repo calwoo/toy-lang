@@ -51,6 +51,23 @@ let eval_primitive (prim : string) : value list -> value =
         | _ -> raise (Bad_interp "too many arguments"))
   | _ -> raise (Bad_interp "not a builtin primitive")
 
+(* Initialized environment *)
+let empty_env = { parent = None; bindings = Map.empty (module String) }
+let to_list t = Map.to_alist t
+
+let add_to_env env k v =
+  { env with bindings = Map.set env.bindings ~key:k ~data:v }
+
+exception Not_found_in_env
+
+let rec lookup_in_env env k =
+  match Map.find env.bindings k with
+  | Some v -> v
+  | None -> (
+      match env.parent with
+      | None -> raise Not_found_in_env
+      | Some eenv -> lookup_in_env eenv k)
+
 let rec eval exp env =
   match exp with
   | ExprUnit -> ValUnit
@@ -58,17 +75,13 @@ let rec eval exp env =
   | ExprBool b -> ValBool b
   | ExprIdent s -> (
       try ValPrim (eval_primitive s)
-      with Bad_interp _ -> raise (Bad_interp "we only accept builtins now"))
+      with Bad_interp _ -> (
+        try lookup_in_env env s
+        with Not_found_in_env ->
+          raise (Bad_interp ("undefined variable " ^ s))))
   | ExprFuncAppl (f, args) -> (
       let f_eval = eval f env in
       let args_eval = List.map ~f:(fun e -> eval e env) args in
       match f_eval with
       | ValPrim p -> p args_eval
       | _ -> raise (Bad_interp "not yet implemented"))
-
-(* Initialized environment *)
-let empty_env = { parent = None; bindings = Map.empty (module String) }
-let to_list t = Map.to_alist t
-
-let add_to_env env k v =
-  { env with bindings = Map.set env.bindings ~key:k ~data:v }
