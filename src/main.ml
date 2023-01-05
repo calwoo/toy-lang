@@ -2,6 +2,7 @@ open Core
 open Lexer
 open Lexing
 open Ast
+open Interp
 
 (* Combine parser and lexer *)
 let print_position outx lexbuf =
@@ -23,7 +24,11 @@ let parse_and_print lexbuf =
   | Some value -> 
       value
         |> List.map ~f:expr_of_sexpr
-        |> List.map ~f:expr_to_string
+        (* |> List.map ~f:expr_to_string
+        |> String.concat ~sep:" "
+        |> print_endline *)
+        |> List.map ~f:(fun e -> eval e 0)
+        |> List.map ~f:value_to_string
         |> String.concat ~sep:" "
         |> print_endline
   | None -> ()
