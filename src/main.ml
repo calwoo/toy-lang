@@ -1,7 +1,7 @@
 open Core
 open Lexer
 open Lexing
-open Sexpr
+open Ast
 
 (* Combine parser and lexer *)
 let print_position outx lexbuf =
@@ -18,13 +18,14 @@ let parse_with_error lexbuf =
     fprintf stderr "%a: syntax error\n" print_position lexbuf;
     exit (-1)
 
-(* let parse file =
-  In_channel.with_file file ~f:(fun ic ->
-    In_channel.input_all ic |> print_endline) *)
-
 let parse_and_print lexbuf =
   match parse_with_error lexbuf with
-  | Some value -> sexpr_to_string value |> print_endline
+  | Some value -> 
+      value
+        |> List.map ~f:expr_of_sexpr
+        |> List.map ~f:expr_to_string
+        |> String.concat ~sep:" "
+        |> print_endline
   | None -> ()
     
 let parse file =

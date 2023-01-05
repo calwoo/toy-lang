@@ -5,7 +5,7 @@
 
 (executable
  (name main)
- (modules main lexer parser sexpr)
+ (modules main lexer parser sexpr ast)
  (libraries core core_unix.command_unix fmt)
  (preprocess
   (pps ppx_jane)))

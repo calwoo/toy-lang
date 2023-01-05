@@ -10,7 +10,7 @@
 %token EOF
 
 %start prog
-%type <Sexpr.sexpr option> prog
+%type <(Sexpr.sexpr list) option> prog
 %type <Sexpr.sexpr>        sexpr
 %type <Sexpr.atom>         atom
 %type <Sexpr.sexpr list>   slist
@@ -21,7 +21,7 @@
 
 prog:
     | EOF { None }
-    | s = sexpr { Some s }
+    | s = sexpr_list EOF { Some s }
 
 sexpr:
     | a = atom { SExprAtom a }
