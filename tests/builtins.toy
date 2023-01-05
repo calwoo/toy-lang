@@ -1,10 +1,10 @@
-(+ 2 3)
-(* 3 5)
+(print (+ 2 3))
+(print (* 3 5))
 
-(int? 3)
-(int? #t)
+(print (int? 3))
+(print (int? #t))
 
-(zero? 3)
+(print (zero? 3))
 (zero? 0)
 
 (bool? 3)

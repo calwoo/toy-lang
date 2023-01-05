@@ -69,6 +69,14 @@ let eval_primitive (prim : string) : value list -> value =
         match args with
         | [ ValBool b ] -> ValBool (not b)
         | _ -> raise (Bad_interp "not a valid input to not"))
+  (* Misc *)
+  | "print" -> (
+      fun args ->
+        match args with
+        | [ v ] ->
+            print_endline (value_to_string v);
+            ValUnit
+        | _ -> raise (Bad_interp "not a valid input to print"))
   | _ -> raise (Bad_interp "not a builtin primitive")
 
 (* Initialized environment *)
