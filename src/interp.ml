@@ -27,6 +27,7 @@ let value_to_string v =
 
 let eval_primitive (prim : string) : value list -> value =
   match prim with
+  (* Arithmetic functions *)
   | "+" ->
       fun args ->
         List.fold_left
@@ -43,12 +44,31 @@ let eval_primitive (prim : string) : value list -> value =
             | ValInt x, ValInt i -> ValInt (x * i)
             | _ -> raise (Bad_interp "can only add numbers"))
           ~init:(ValInt 1) args
+  (* Integer builtins *)
+  | "zero?" -> (
+      fun args ->
+        match args with
+        | [ ValInt i ] -> ValBool (i = 0)
+        | [ _ ] -> ValBool false
+        | _ -> raise (Bad_interp "too many arguments"))
+  | "int?" -> (
+      fun args ->
+        match args with
+        | [ ValInt _ ] -> ValBool true
+        | [ _ ] -> ValBool false
+        | _ -> raise (Bad_interp "too many arguments"))
+  (* Boolean builtins *)
   | "bool?" -> (
       fun args ->
         match args with
         | [ ValBool _ ] -> ValBool true
         | [ _ ] -> ValBool false
         | _ -> raise (Bad_interp "too many arguments"))
+  | "not" -> (
+      fun args ->
+        match args with
+        | [ ValBool b ] -> ValBool (not b)
+        | _ -> raise (Bad_interp "not a valid input to not"))
   | _ -> raise (Bad_interp "not a builtin primitive")
 
 (* Initialized environment *)

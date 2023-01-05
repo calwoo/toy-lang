@@ -23,9 +23,6 @@ let parse_and_print lexbuf =
   match parse_with_error lexbuf with
   | Some value ->
       value |> List.map ~f:expr_of_sexpr
-      (* |> List.map ~f:expr_to_string
-         |> String.concat ~sep:" "
-         |> print_endline *)
       |> List.map ~f:(fun e -> eval e empty_env)
       |> List.map ~f:value_to_string
       |> String.concat ~sep:" " |> print_endline
