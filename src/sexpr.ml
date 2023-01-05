@@ -2,15 +2,8 @@
 type id = string
 
 (* S-Expressions *)
-type atom =
-  | AtomUnit
-  | AtomBool  of bool
-  | AtomInt   of int
-  | AtomIdent of id
-
-type sexpr =
-  | SExprAtom of atom
-  | SExprList of sexpr list
+type atom = AtomUnit | AtomBool of bool | AtomInt of int | AtomIdent of id
+type sexpr = SExprAtom of atom | SExprList of sexpr list
 
 let rec sexpr_to_string e =
   match e with
