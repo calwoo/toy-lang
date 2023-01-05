@@ -23,9 +23,13 @@ let parse_and_print lexbuf =
   match parse_with_error lexbuf with
   | Some value ->
       value |> List.map ~f:expr_of_sexpr
-      |> List.map ~f:(fun e -> eval e empty_env)
-      |> List.map ~f:value_to_string
-      |> String.concat ~sep:" " |> print_endline
+      |> List.fold_left
+           ~f:(fun acc e -> eval e acc.env)
+           ~init:{ value = ValUnit; env = empty_env }
+      |> fun recd -> recd.value |> value_to_string |> print_endline
+      (* |> List.map ~f:(fun e -> eval e empty_env)
+         |> List.map ~f:value_to_string
+         |> String.concat ~sep:" " |> print_endline *)
   | None -> ()
 
 let parse file =

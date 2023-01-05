@@ -88,20 +88,26 @@ let rec lookup_in_env env k =
       | None -> raise Not_found_in_env
       | Some eenv -> lookup_in_env eenv k)
 
+type interp_value = { value : value; env : env }
+
 let rec eval exp env =
   match exp with
-  | ExprUnit -> ValUnit
-  | ExprInt i -> ValInt i
-  | ExprBool b -> ValBool b
+  | ExprUnit -> { value = ValUnit; env }
+  | ExprInt i -> { value = ValInt i; env }
+  | ExprBool b -> { value = ValBool b; env }
   | ExprIdent s -> (
-      try ValPrim (eval_primitive s)
+      try { value = ValPrim (eval_primitive s); env }
       with Bad_interp _ -> (
-        try lookup_in_env env s
+        try { value = lookup_in_env env s; env }
         with Not_found_in_env ->
           raise (Bad_interp ("undefined variable " ^ s))))
+  | ExprDef (name, v) ->
+      let v_eval = eval v env in
+      let next_env = add_to_env env name v_eval.value in
+      { value = ValUnit; env = next_env }
   | ExprFuncAppl (f, args) -> (
       let f_eval = eval f env in
-      let args_eval = List.map ~f:(fun e -> eval e env) args in
-      match f_eval with
-      | ValPrim p -> p args_eval
+      let args_eval = List.map ~f:(fun e -> (eval e env).value) args in
+      match f_eval.value with
+      | ValPrim p -> { value = p args_eval; env }
       | _ -> raise (Bad_interp "not yet implemented"))
