@@ -17,8 +17,8 @@ let rec sexpr_to_string e =
   | SExprAtom AtomUnit -> "UNIT"
   | SExprAtom (AtomBool true) -> "TRUE"
   | SExprAtom (AtomBool false) -> "FALSE"
-  | SExprAtom (AtomInt i) -> string_of_int i
-  | SExprAtom (AtomIdent s) -> s
+  | SExprAtom (AtomInt i) -> Printf.sprintf "INT(%d)" i
+  | SExprAtom (AtomIdent s) -> Printf.sprintf "ATOM(%s)" s
   | SExprList l ->
       let ss = l |> List.map sexpr_to_string |> String.concat " " in
       "(" ^ ss ^ ")"

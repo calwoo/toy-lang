@@ -1,5 +1,3 @@
-open Sexpr
-
 (* Expressions *)
 type expr =
   | ExprUnit
