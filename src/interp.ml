@@ -37,6 +37,10 @@ let eval_primitive (prim : string) : (value list -> value) =
                                         (match (a, b) with
                                         | (ValInt x, ValInt i) -> ValInt (x * i)
                                         | _ -> raise (Bad_interp "can only add numbers"))) ~init:(ValInt 1) args
+  | "bool?" -> fun args -> (match args with
+                           | [ValBool _] -> ValBool true
+                           | [_] -> ValBool false
+                           | _ -> raise (Bad_interp "too many arguments"))              
   | _ -> raise (Bad_interp "not a builtin primitive")
 
 let rec eval exp env =
