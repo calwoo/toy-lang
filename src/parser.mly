@@ -1,5 +1,5 @@
 %{
-
+    open Sexpr
 %}
 
 %token LPAREN RPAREN
@@ -9,16 +9,17 @@
 %token <string> ID
 %token EOF
 
-%type <Sexpr.sexpr option> parse
+%start prog
+%type <Sexpr.sexpr option> prog
 %type <Sexpr.sexpr>        sexpr
-%type <Sexpr.atom>        atom
+%type <Sexpr.atom>         atom
 %type <Sexpr.sexpr list>   slist
 %type <Sexpr.sexpr list>   sexpr_list
 
 %%
 
 
-parse:
+prog:
     | EOF { None }
     | s = sexpr { Some s }
 

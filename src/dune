@@ -1,6 +1,11 @@
+(menhir
+ (modules parser))
+
+(ocamllex lexer)
+
 (executable
  (name main)
- (modules main)
+ (modules main lexer parser sexpr)
  (libraries core core_unix.command_unix fmt)
  (preprocess
   (pps ppx_jane)))
