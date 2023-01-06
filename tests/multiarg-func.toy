@@ -1,0 +1,5 @@
+(define adder
+    (lambda (x y)
+        (+ x y)))
+
+(print (adder 3 2))

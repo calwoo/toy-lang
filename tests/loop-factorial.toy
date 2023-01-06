@@ -1,0 +1,14 @@
+(define factorial
+    (lambda (n)
+        (if (= n 0)
+            1
+            (* n (factorial (- n 1))))))
+
+(define loop
+    (lambda (start end f)
+        (if (= start end)
+            #u
+            (block (print (f start))
+                   (loop (+ start 1) end f)))))
+
+(loop 0 10 factorial)

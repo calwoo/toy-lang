@@ -110,6 +110,11 @@ let eval_primitive (prim : string) : value list -> value =
 let empty_env = { parent = None; bindings = Map.empty (module String) }
 let to_list t = Map.to_alist t
 
+let print_env env =
+  to_list env.bindings |> List.map ~f:(fun (name, v) -> Printf.sprintf "%s -> %s" name (value_to_string v))
+    |> String.concat ~sep:"\n"
+    |> print_endline; print_endline "==="
+
 let add_to_env env k v =
   { env with bindings = Map.set env.bindings ~key:k ~data:v }
 

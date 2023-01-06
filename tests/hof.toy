@@ -1,0 +1,9 @@
+(define add1
+    (lambda (n)
+        (+ n 1)))
+
+(define apply
+    (lambda (f x)
+        (f x)))
+
+(print (apply add1 10))

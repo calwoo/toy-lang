@@ -1,0 +1,8 @@
+(define loop
+    (lambda (start end f)
+        (if (= start end)
+            #u
+            (block (print (f start))
+                   (loop (+ start 1) end f)))))
+
+(loop 0 10 (lambda (x) (+ x 1)))
