@@ -9,6 +9,7 @@ type expr =
   | ExprInt of int
   | ExprIdent of id
   | ExprDef of id * expr
+  | ExprIf of expr * expr * expr
   | ExprLambda of id list * expr
   | ExprFuncAppl of expr * expr list
 
@@ -38,6 +39,14 @@ let rec expr_of_sexpr e =
               in
               ExprLambda (ids, ee)
           | _ -> raise (Bad_expr "not a valid lambda"))
+      | ExprIdent "if" -> (
+          match tl with
+          | [ cond; then_branch; else_branch ] ->
+              let cond_e = expr_of_sexpr cond in
+              let then_e = expr_of_sexpr then_branch in
+              let else_e = expr_of_sexpr else_branch in
+              ExprIf (cond_e, then_e, else_e)
+          | _ -> raise (Bad_expr "not a valid if expression"))
       | ExprIdent s -> ExprFuncAppl (ExprIdent s, List.map expr_of_sexpr tl)
       | ExprLambda _ -> ExprFuncAppl (expr_hd, List.map expr_of_sexpr tl)
       | _ -> raise (Bad_expr "need to have function in front"))
@@ -51,6 +60,12 @@ let rec expr_to_string e =
   | ExprInt i -> Printf.sprintf "INT(%d)" i
   | ExprIdent s -> Printf.sprintf "ATOM(%s)" s
   | ExprDef (s, d) -> Printf.sprintf "DEF(%s = %s)" s (expr_to_string d)
+  | ExprIf (cond, th, el) ->
+      Printf.sprintf "IF(%s, %s, %s)" (expr_to_string cond) (expr_to_string th)
+        (expr_to_string el)
+  | ExprLambda (args, body) ->
+      let ss = args |> String.concat " " in
+      Printf.sprintf "LAMBDA(%s -> %s)" ss (expr_to_string body)
   | ExprFuncAppl (ExprIdent s, args) ->
       let ss = args |> List.map expr_to_string |> String.concat ", " in
       Printf.sprintf "APPLY(%s, %s)" s ss

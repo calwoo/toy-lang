@@ -37,14 +37,11 @@ let eval_primitive (prim : string) : value list -> value =
             | ValInt x, ValInt i -> ValInt (x + i)
             | _ -> raise (Bad_interp "can only add numbers"))
           ~init:(ValInt 0) args
-  | "-" ->
+  | "-" -> (
       fun args ->
-        List.fold_left
-          ~f:(fun a b ->
-            match (a, b) with
-            | ValInt x, ValInt i -> ValInt (x - i)
-            | _ -> raise (Bad_interp "can only subtract numbers"))
-          ~init:(ValInt 0) args
+        match args with
+        | [ ValInt a; ValInt b ] -> ValInt (a - b)
+        | _ -> raise (Bad_interp "not a valid input to minus"))
   | "*" ->
       fun args ->
         List.fold_left
@@ -78,14 +75,11 @@ let eval_primitive (prim : string) : value list -> value =
         match args with
         | [ ValBool b ] -> ValBool (not b)
         | _ -> raise (Bad_interp "not a valid input to not"))
-  | "=" ->
+  | "=" -> (
       fun args ->
-        List.fold_left
-          ~f:(fun a b ->
-            match (a, b) with
-            | ValInt x, ValInt i -> ValBool (x = i)
-            | _ -> raise (Bad_interp "can only compare numbers"))
-          ~init:(ValInt 0) args
+        match args with
+        | [ ValInt a; ValInt b ] -> ValBool (a = b)
+        | _ -> raise (Bad_interp "not a valid input to ="))
   (* Misc *)
   | "print" -> (
       fun args ->
@@ -137,6 +131,12 @@ let rec eval exp env =
       let v_eval = eval v env in
       let next_env = add_to_env env name v_eval.value in
       { value = ValUnit; env = next_env }
+  | ExprIf (cond, then_branch, else_branch) -> (
+      let cond_val = (eval cond env).value in
+      match cond_val with
+      | ValBool true -> eval then_branch env
+      | ValBool false -> eval else_branch env
+      | _ -> raise (Bad_interp "condition must evaluate to a boolean"))
   | ExprFuncAppl (f, args) -> (
       let f_eval = eval f env in
       let args_eval = List.map ~f:(fun e -> (eval e env).value) args in
