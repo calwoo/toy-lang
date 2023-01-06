@@ -2,6 +2,7 @@
 
 open Core
 open Ast
+open Util
 
 exception Bad_interp of string
 
@@ -36,13 +37,21 @@ let eval_primitive (prim : string) : value list -> value =
             | ValInt x, ValInt i -> ValInt (x + i)
             | _ -> raise (Bad_interp "can only add numbers"))
           ~init:(ValInt 0) args
+  | "-" ->
+      fun args ->
+        List.fold_left
+          ~f:(fun a b ->
+            match (a, b) with
+            | ValInt x, ValInt i -> ValInt (x - i)
+            | _ -> raise (Bad_interp "can only subtract numbers"))
+          ~init:(ValInt 0) args
   | "*" ->
       fun args ->
         List.fold_left
           ~f:(fun a b ->
             match (a, b) with
             | ValInt x, ValInt i -> ValInt (x * i)
-            | _ -> raise (Bad_interp "can only add numbers"))
+            | _ -> raise (Bad_interp "can only multiply numbers"))
           ~init:(ValInt 1) args
   (* Integer builtins *)
   | "zero?" -> (
@@ -69,6 +78,14 @@ let eval_primitive (prim : string) : value list -> value =
         match args with
         | [ ValBool b ] -> ValBool (not b)
         | _ -> raise (Bad_interp "not a valid input to not"))
+  | "=" ->
+      fun args ->
+        List.fold_left
+          ~f:(fun a b ->
+            match (a, b) with
+            | ValInt x, ValInt i -> ValBool (x = i)
+            | _ -> raise (Bad_interp "can only compare numbers"))
+          ~init:(ValInt 0) args
   (* Misc *)
   | "print" -> (
       fun args ->
@@ -95,14 +112,8 @@ let rec lookup_in_env env k =
       match env.parent with
       | None -> raise Not_found_in_env
       | Some eenv -> lookup_in_env eenv k)
-      
-exception Not_enough_args
 
-let rec eval_lambda exp arg_names arg_values env =
-  if (not (List.length arg_names = List.length arg_values))
-    then raise Not_enough_args
-else let arg_assignments = zip_lists arg_names arg_values in
-  let lambda_env = List.fold ~f:(fun acc (arg, v) -> )
+exception Not_enough_args
 
 type interp_value = { value : value; env : env }
 
@@ -111,9 +122,11 @@ let rec eval exp env =
   | ExprUnit -> { value = ValUnit; env }
   | ExprInt i -> { value = ValInt i; env }
   | ExprBool b -> { value = ValBool b; env }
-  | ExprLambda(args, body) ->
-      let scoped_env = { parent = Some env; bindings = Map.empty (module String) } in
-      { value = ValLambda(scoped_env, args, body); env = env }
+  | ExprLambda (args, body) ->
+      let scoped_env =
+        { parent = Some env; bindings = Map.empty (module String) }
+      in
+      { value = ValLambda (scoped_env, args, body); env }
   | ExprIdent s -> (
       try { value = ValPrim (eval_primitive s); env }
       with Bad_interp _ -> (
@@ -129,6 +142,18 @@ let rec eval exp env =
       let args_eval = List.map ~f:(fun e -> (eval e env).value) args in
       match f_eval.value with
       | ValPrim p -> { value = p args_eval; env }
-      | ValLambda(scoped_env, args, body_expr) ->
-          { value = eval_lambda body_expr args args_eval scoped_env; env = env }
+      | ValLambda (scoped_env, args, body_expr) ->
+          { value = eval_lambda body_expr args args_eval scoped_env; env }
       | _ -> raise (Bad_interp "not yet implemented"))
+
+and eval_lambda exp arg_names arg_values env =
+  if not (List.length arg_names = List.length arg_values) then
+    raise Not_enough_args
+  else
+    let arg_assignments = zip_lists arg_names arg_values in
+    let lambda_env =
+      List.fold
+        ~f:(fun acc (arg, v) -> add_to_env acc arg v)
+        ~init:env arg_assignments
+    in
+    (eval exp lambda_env).value

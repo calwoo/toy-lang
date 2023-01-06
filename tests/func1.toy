@@ -1,0 +1,7 @@
+(define y 2)
+
+(define addy
+    (lambda (x)
+        (+ x y)))
+
+(print (addy 5))

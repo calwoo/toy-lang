@@ -18,7 +18,7 @@ let digit = ['0'-'9']
 let integer = '-'? ['0'-'9']+
 let letters = ['a'-'z' 'A'-'Z']
 let symbols = '+' | '-' | '*' | '/' | '!' | '?'
-let id = (letters | symbols)+
+let id = (letters | symbols) (letters | digit | symbols)*
 
 rule read = parse
     | white   { read lexbuf }
