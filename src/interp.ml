@@ -147,6 +147,11 @@ let rec eval exp env =
       let v_eval = eval v env in
       let next_env = add_to_env env name v_eval.value in
       { value = ValUnit; env = next_env }
+  | ExprBlock exprs ->
+      exprs
+      |> List.fold
+           ~f:(fun acc e -> eval e acc.env)
+           ~init:{ value = ValUnit; env }
   | ExprIf (cond, then_branch, else_branch) -> (
       let cond_val = (eval cond env).value in
       match cond_val with

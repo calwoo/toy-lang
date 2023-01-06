@@ -9,6 +9,7 @@ type expr =
   | ExprInt of int
   | ExprIdent of id
   | ExprDef of id * expr
+  | ExprBlock of expr list
   | ExprIf of expr * expr * expr
   | ExprLambda of id list * expr
   | ExprFuncAppl of expr * expr list
@@ -27,6 +28,9 @@ let rec expr_of_sexpr e =
           match tl |> List.map expr_of_sexpr with
           | [ ExprIdent n; e ] -> ExprDef (n, e)
           | _ -> raise (Bad_expr "not a valid definition"))
+      | ExprIdent "block" ->
+          let ees = List.map expr_of_sexpr tl in
+          ExprBlock ees
       | ExprIdent "lambda" -> (
           match tl with
           | [ SExprList args; e ] ->
@@ -64,6 +68,9 @@ let rec expr_to_string e =
   | ExprInt i -> Printf.sprintf "INT(%d)" i
   | ExprIdent s -> Printf.sprintf "ATOM(%s)" s
   | ExprDef (s, d) -> Printf.sprintf "DEF(%s = %s)" s (expr_to_string d)
+  | ExprBlock exprs ->
+      let ss = exprs |> List.map expr_to_string |> String.concat "; " in
+      Printf.sprintf "BLOCK(%s)" ss
   | ExprIf (cond, th, el) ->
       Printf.sprintf "IF(%s, %s, %s)" (expr_to_string cond) (expr_to_string th)
         (expr_to_string el)
