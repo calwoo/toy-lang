@@ -12,7 +12,7 @@ type value =
   | ValBool of bool
   | ValInt of int
   | ValPrim of (value list -> value)
-  | ValLambda of env * id list * expr list
+  | ValLambda of env * id list * expr
 
 and env_t = (id, value, String.comparator_witness) Map.t
 and env = { parent : env option; bindings : env_t }
@@ -95,6 +95,14 @@ let rec lookup_in_env env k =
       match env.parent with
       | None -> raise Not_found_in_env
       | Some eenv -> lookup_in_env eenv k)
+      
+exception Not_enough_args
+
+let rec eval_lambda exp arg_names arg_values env =
+  if (not (List.length arg_names = List.length arg_values))
+    then raise Not_enough_args
+else let arg_assignments = zip_lists arg_names arg_values in
+  let lambda_env = List.fold ~f:(fun acc (arg, v) -> )
 
 type interp_value = { value : value; env : env }
 
@@ -103,6 +111,9 @@ let rec eval exp env =
   | ExprUnit -> { value = ValUnit; env }
   | ExprInt i -> { value = ValInt i; env }
   | ExprBool b -> { value = ValBool b; env }
+  | ExprLambda(args, body) ->
+      let scoped_env = { parent = Some env; bindings = Map.empty (module String) } in
+      { value = ValLambda(scoped_env, args, body); env = env }
   | ExprIdent s -> (
       try { value = ValPrim (eval_primitive s); env }
       with Bad_interp _ -> (
@@ -118,4 +129,6 @@ let rec eval exp env =
       let args_eval = List.map ~f:(fun e -> (eval e env).value) args in
       match f_eval.value with
       | ValPrim p -> { value = p args_eval; env }
+      | ValLambda(scoped_env, args, body_expr) ->
+          { value = eval_lambda body_expr args args_eval scoped_env; env = env }
       | _ -> raise (Bad_interp "not yet implemented"))

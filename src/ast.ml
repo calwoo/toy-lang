@@ -9,6 +9,7 @@ type expr =
   | ExprInt of int
   | ExprIdent of id
   | ExprDef of id * expr
+  | ExprLambda of id list * expr
   | ExprFuncAppl of expr * expr list
 
 let rec expr_of_sexpr e =
@@ -24,7 +25,21 @@ let rec expr_of_sexpr e =
           match tl |> List.map expr_of_sexpr with
           | [ ExprIdent n; e ] -> ExprDef (n, e)
           | _ -> raise (Bad_expr "not a valid definition"))
+      | ExprIdent "lambda" -> (
+          match tl with
+          | [ SExprList args; e ] ->
+              let ee = expr_of_sexpr e in
+              let ids =
+                args
+                |> List.map (fun s ->
+                       match s with
+                       | SExprAtom (AtomIdent arg) -> arg
+                       | _ -> raise (Bad_expr "not an argument of a lambda"))
+              in
+              ExprLambda (ids, ee)
+          | _ -> raise (Bad_expr "not a valid lambda"))
       | ExprIdent s -> ExprFuncAppl (ExprIdent s, List.map expr_of_sexpr tl)
+      | ExprLambda _ -> ExprFuncAppl (expr_hd, List.map expr_of_sexpr tl)
       | _ -> raise (Bad_expr "need to have function in front"))
   | _ -> raise (Bad_expr "don't yet accept empty s-exps")
 
