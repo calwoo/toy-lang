@@ -17,7 +17,7 @@ let newline = '\r' | '\n' | "\r\n"
 let digit = ['0'-'9']
 let integer = '-'? ['0'-'9']+
 let letters = ['a'-'z' 'A'-'Z']
-let symbols = '+' | '-' | '*' | '/' | '!' | '?' | '='
+let symbols = '+' | '-' | '*' | '/' | '!' | '?' | '=' | '<' | '>'
 let id = (letters | symbols) (letters | digit | symbols)*
 
 rule read = parse

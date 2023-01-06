@@ -50,6 +50,11 @@ let eval_primitive (prim : string) : value list -> value =
             | ValInt x, ValInt i -> ValInt (x * i)
             | _ -> raise (Bad_interp "can only multiply numbers"))
           ~init:(ValInt 1) args
+  | "<" -> (
+      fun args ->
+        match args with
+        | [ ValInt a; ValInt b ] -> ValBool (a < b)
+        | _ -> raise (Bad_interp "not a valid input to less-than"))
   (* Integer builtins *)
   | "zero?" -> (
       fun args ->
