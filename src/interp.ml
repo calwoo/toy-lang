@@ -142,8 +142,17 @@ let rec eval exp env =
       let args_eval = List.map ~f:(fun e -> (eval e env).value) args in
       match f_eval.value with
       | ValPrim p -> { value = p args_eval; env }
-      | ValLambda (scoped_env, args, body_expr) ->
-          { value = eval_lambda body_expr args args_eval scoped_env; env }
+      | ValLambda (scoped_env, args, body_expr) -> (
+          match f with
+          | ExprIdent s ->
+              (* Allow for recursive functions by adding lambda into environment *)
+              let rec_scoped_env = add_to_env scoped_env s f_eval.value in
+              {
+                value = eval_lambda body_expr args args_eval rec_scoped_env;
+                env;
+              }
+          | _ ->
+              { value = eval_lambda body_expr args args_eval scoped_env; env })
       | _ -> raise (Bad_interp "not yet implemented"))
 
 and eval_lambda exp arg_names arg_values env =

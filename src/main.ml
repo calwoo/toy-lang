@@ -27,9 +27,6 @@ let parse_and_print lexbuf =
            ~f:(fun acc e -> eval e acc.env)
            ~init:{ value = ValUnit; env = empty_env }
       |> fun recd -> recd.value |> value_to_string |> print_endline
-      (* |> List.map ~f:(fun e -> eval e empty_env)
-         |> List.map ~f:value_to_string
-         |> String.concat ~sep:" " |> print_endline *)
   | None -> ()
 
 let parse file =
