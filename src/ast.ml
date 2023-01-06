@@ -12,6 +12,7 @@ type expr =
   | ExprIf of expr * expr * expr
   | ExprLambda of id list * expr
   | ExprFuncAppl of expr * expr list
+  | ExprList of expr list
 
 let rec expr_of_sexpr e =
   match e with
@@ -47,6 +48,9 @@ let rec expr_of_sexpr e =
               let else_e = expr_of_sexpr else_branch in
               ExprIf (cond_e, then_e, else_e)
           | _ -> raise (Bad_expr "not a valid if expression"))
+      | ExprIdent "list" ->
+          let ees = List.map expr_of_sexpr tl in
+          ExprList ees
       | ExprIdent s -> ExprFuncAppl (ExprIdent s, List.map expr_of_sexpr tl)
       | ExprLambda _ -> ExprFuncAppl (expr_hd, List.map expr_of_sexpr tl)
       | _ -> raise (Bad_expr "need to have function in front"))
@@ -69,4 +73,7 @@ let rec expr_to_string e =
   | ExprFuncAppl (ExprIdent s, args) ->
       let ss = args |> List.map expr_to_string |> String.concat ", " in
       Printf.sprintf "APPLY(%s, %s)" s ss
+  | ExprList exprs ->
+      let ss = exprs |> List.map expr_to_string |> String.concat ", " in
+      Printf.sprintf "LIST(%s)" ss
   | _ -> raise (Bad_expr "not acceptable expr")

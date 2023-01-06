@@ -14,16 +14,20 @@ type value =
   | ValInt of int
   | ValPrim of (value list -> value)
   | ValLambda of env * id list * expr
+  | ValList of value list
 
 and env_t = (id, value, String.comparator_witness) Map.t
 and env = { parent : env option; bindings : env_t }
 
-let value_to_string v =
+let rec value_to_string v =
   match v with
   | ValUnit -> "#u"
   | ValBool true -> "#t"
   | ValBool false -> "#f"
   | ValInt i -> string_of_int i
+  | ValList vs ->
+      let vss = vs |> List.map ~f:value_to_string |> String.concat ~sep:", " in
+      Printf.sprintf "(%s)" vss
   | _ -> "?"
 
 let eval_primitive (prim : string) : value list -> value =
@@ -85,6 +89,13 @@ let eval_primitive (prim : string) : value list -> value =
         match args with
         | [ ValInt a; ValInt b ] -> ValBool (a = b)
         | _ -> raise (Bad_interp "not a valid input to ="))
+  (* List builtins *)
+  | "list?" -> (
+      fun args ->
+        match args with
+        | [ ValList _ ] -> ValBool true
+        | [ _ ] -> ValBool false
+        | _ -> raise (Bad_interp "too many arguments"))
   (* Misc *)
   | "print" -> (
       fun args ->
@@ -158,7 +169,10 @@ let rec eval exp env =
               }
           | _ ->
               { value = eval_lambda body_expr args args_eval scoped_env; env })
-      | _ -> raise (Bad_interp "not yet implemented"))
+      | _ -> raise (Bad_interp "not a function to be applied"))
+  | ExprList exprs ->
+      let vals = exprs |> List.map ~f:(fun e -> (eval e env).value) in
+      { value = ValList vals; env }
 
 and eval_lambda exp arg_names arg_values env =
   if not (List.length arg_names = List.length arg_values) then
