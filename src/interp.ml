@@ -185,7 +185,6 @@ let rec eval exp env =
           | ExprIdent s ->
               (* Allow for recursive functions by adding lambda into environment *)
               let rec_scoped_env = add_to_env scoped_env s f_eval.value in
-              print_endline (Printf.sprintf "adding to env: %s" s);
               {
                 value = eval_lambda body_expr args args_eval rec_scoped_env;
                 env;
@@ -207,5 +206,4 @@ and eval_lambda exp arg_names arg_values env =
         ~f:(fun acc (arg, v) -> add_to_env acc arg v)
         ~init:env arg_assignments
     in
-    print_env lambda_env;
     (eval exp lambda_env).value

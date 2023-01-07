@@ -1,6 +1,0 @@
-(define f
-    (lambda (x y) (+ x y)))
-(define g
-    (lambda (x) (f x x)))
-
-(print (g 3))

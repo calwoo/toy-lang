@@ -1,7 +1,0 @@
-(define x 3)
-
-(define shadow
-    (lambda (x)
-        (+ x x)))
-
-(print (shadow 2))

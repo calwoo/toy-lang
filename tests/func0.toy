@@ -1,5 +1,0 @@
-(define f
-    (lambda (n)
-        (* n (+ n 1))))
-
-(print (f 3))
