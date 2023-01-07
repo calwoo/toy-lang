@@ -13,11 +13,12 @@ type value =
   | ValBool of bool
   | ValInt of int
   | ValPrim of (value list -> value)
-  | ValLambda of env * id list * expr
+  | ValLambda of closure
   | ValList of value list
 
 and env_t = (id, value, String.comparator_witness) Map.t
 and env = { parent : env option; bindings : env_t }
+and closure = { name : id option; env : env; argnames : id list; body : expr }
 
 let rec value_to_string v =
   match v with
@@ -25,6 +26,10 @@ let rec value_to_string v =
   | ValBool true -> "#t"
   | ValBool false -> "#f"
   | ValInt i -> string_of_int i
+  | ValLambda { name; _ } -> (
+      match name with
+      | Some s -> Printf.sprintf "func(%s)" s
+      | None -> "anonfunc")
   | ValList vs ->
       let vss = vs |> List.map ~f:value_to_string |> String.concat ~sep:", " in
       Printf.sprintf "(%s)" vss
@@ -111,9 +116,11 @@ let empty_env = { parent = None; bindings = Map.empty (module String) }
 let to_list t = Map.to_alist t
 
 let print_env env =
-  to_list env.bindings |> List.map ~f:(fun (name, v) -> Printf.sprintf "%s -> %s" name (value_to_string v))
-    |> String.concat ~sep:"\n"
-    |> print_endline; print_endline "==="
+  to_list env.bindings
+  |> List.map ~f:(fun (name, v) ->
+         Printf.sprintf "%s -> %s" name (value_to_string v))
+  |> String.concat ~sep:"\n" |> print_endline;
+  print_endline "==="
 
 let add_to_env env k v =
   { env with bindings = Map.set env.bindings ~key:k ~data:v }
@@ -141,7 +148,11 @@ let rec eval exp env =
       let scoped_env =
         { parent = Some env; bindings = Map.empty (module String) }
       in
-      { value = ValLambda (scoped_env, args, body); env }
+      {
+        value =
+          ValLambda { name = None; env = scoped_env; argnames = args; body };
+        env;
+      }
   | ExprIdent s -> (
       try { value = ValPrim (eval_primitive s); env }
       with Bad_interp _ -> (
@@ -164,15 +175,18 @@ let rec eval exp env =
       | ValBool false -> eval else_branch env
       | _ -> raise (Bad_interp "condition must evaluate to a boolean"))
   | ExprFuncAppl (f, args) -> (
+      print_endline (Printf.sprintf "applying function: %s" (expr_to_string f));
       let f_eval = eval f env in
       let args_eval = List.map ~f:(fun e -> (eval e env).value) args in
       match f_eval.value with
       | ValPrim p -> { value = p args_eval; env }
-      | ValLambda (scoped_env, args, body_expr) -> (
+      | ValLambda { env = scoped_env; argnames = args; body = body_expr; _ }
+        -> (
           match f with
           | ExprIdent s ->
               (* Allow for recursive functions by adding lambda into environment *)
               let rec_scoped_env = add_to_env scoped_env s f_eval.value in
+              print_endline (Printf.sprintf "adding to env: %s" s);
               {
                 value = eval_lambda body_expr args args_eval rec_scoped_env;
                 env;
@@ -194,4 +208,5 @@ and eval_lambda exp arg_names arg_values env =
         ~f:(fun acc (arg, v) -> add_to_env acc arg v)
         ~init:env arg_assignments
     in
+    print_env lambda_env;
     (eval exp lambda_env).value

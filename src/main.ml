@@ -24,7 +24,7 @@ let parse_and_print lexbuf =
   | Some value ->
       value |> List.map ~f:expr_of_sexpr
       |> List.fold_left
-           ~f:(fun acc e -> print_env acc.env; eval e acc.env)
+           ~f:(fun acc e -> eval e acc.env)
            ~init:{ value = ValUnit; env = empty_env }
       |> fun recd -> recd.value |> value_to_string |> print_endline
   | None -> ()
