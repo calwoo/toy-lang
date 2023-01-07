@@ -1,5 +1,5 @@
 %{
-    open Sexpr
+    open Ast.Ast_sexpr
 %}
 
 %token LPAREN RPAREN
@@ -10,11 +10,11 @@
 %token EOF
 
 %start prog
-%type <(Sexpr.sexpr list) option> prog
-%type <Sexpr.sexpr>        sexpr
-%type <Sexpr.atom>         atom
-%type <Sexpr.sexpr list>   slist
-%type <Sexpr.sexpr list>   sexpr_list
+%type <(sexpr list) option> prog
+%type <sexpr>        sexpr
+%type <atom>         atom
+%type <sexpr list>   slist
+%type <sexpr list>   sexpr_list
 
 %%
 

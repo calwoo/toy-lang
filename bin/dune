@@ -1,0 +1,5 @@
+(executable
+ (name main)
+ (libraries core core_unix.command_unix fmt toy)
+ (preprocess
+  (pps ppx_jane)))

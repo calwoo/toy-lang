@@ -1,7 +1,7 @@
 (* Toy interpreter for this language *)
 
 open Core
-open Ast
+open Ast.Ast_expr
 open Util
 
 exception Bad_interp of string
@@ -175,7 +175,6 @@ let rec eval exp env =
       | ValBool false -> eval else_branch env
       | _ -> raise (Bad_interp "condition must evaluate to a boolean"))
   | ExprFuncAppl (f, args) -> (
-      print_endline (Printf.sprintf "applying function: %s" (expr_to_string f));
       let f_eval = eval f env in
       let args_eval = List.map ~f:(fun e -> (eval e env).value) args in
       match f_eval.value with

@@ -1,3 +1,3 @@
 (lang dune 3.6)
-(name toy-lisp-ppl)
+(name toy-lang)
 (using menhir 2.1)

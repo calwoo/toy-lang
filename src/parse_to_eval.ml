@@ -1,7 +1,8 @@
 open Core
-open Lexer
+open Parsing.Lexer
+open Parsing.Parser
 open Lexing
-open Ast
+open Ast.Ast_expr
 open Interp
 
 (* Combine parser and lexer *)
@@ -11,11 +12,11 @@ let print_position outx lexbuf =
     (pos.pos_cnum - pos.pos_bol + 1)
 
 let parse_with_error lexbuf =
-  try Parser.prog Lexer.read lexbuf with
+  try prog read lexbuf with
   | SyntaxError msg ->
       fprintf stderr "%a: %s\n" print_position lexbuf msg;
       None
-  | Parser.Error ->
+  | Error ->
       fprintf stderr "%a: syntax error\n" print_position lexbuf;
       exit (-1)
 
@@ -29,20 +30,13 @@ let parse_and_print lexbuf =
       |> fun recd -> recd.value |> value_to_string |> print_endline
   | None -> ()
 
-let parse file =
+let parse_from_file file =
   let inx = In_channel.create file in
   let lexbuf = Lexing.from_channel inx in
   lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = file };
   parse_and_print lexbuf;
   In_channel.close inx
 
-let filename_param =
-  let open Command.Param in
-  anon ("filename" %: string)
-
-let command =
-  Command.basic ~summary:"Runtime for toy programs"
-    ~readme:(fun () -> "More detailed information")
-    (Command.Param.map filename_param ~f:(fun filename () -> parse filename))
-
-let () = Command_unix.run ~version:"1.0" ~build_info:"RWO" command
+let parse_from_string prog_str =
+  let lexbuf = Lexing.from_string prog_str in
+  parse_and_print lexbuf

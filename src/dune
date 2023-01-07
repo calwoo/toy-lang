@@ -1,11 +1,14 @@
-(menhir
- (modules parser))
+; (library
+;  (name toy))
 
-(ocamllex lexer)
+; (executable
+;  (name main)
+;  (modules main lexer parser sexpr ast interp util)
+;  (libraries core core_unix.command_unix fmt)
+;  (preprocess
+;   (pps ppx_jane)))
 
-(executable
- (name main)
- (modules main lexer parser sexpr ast interp util)
- (libraries core core_unix.command_unix fmt)
- (preprocess
-  (pps ppx_jane)))
+(library
+ (name toy)
+ ; (modules parse_to_eval)
+ (libraries core fmt ast parsing))
