@@ -180,32 +180,38 @@ let rec eval exp env =
       | ValBool false -> eval else_branch env
       | _ -> raise (Bad_interp "condition must evaluate to a boolean"))
   | ExprFuncAppl (f, args) -> (
-      let f_eval = eval f env in
+      let f_eval = (eval f env).value in
       let args_eval = List.map ~f:(fun e -> (eval e env).value) args in
-      match f_eval.value with
+      match f_eval with
       | ValPrim p -> { value = p args_eval; env }
-      | ValLambda { env = scoped_env; argnames = args; body = body_expr; _ }
-        -> (
-          match f with
-          | ExprIdent s ->
+      | ValLambda closure -> (
+          match closure.name with
+          | Some name ->
               (* Allow for recursive functions by adding lambda into environment *)
-              let rec_scoped_env = add_to_env scoped_env s f_eval.value in
+              let rec_env = add_to_env closure.env name f_eval in
               {
-                value = eval_lambda body_expr args args_eval rec_scoped_env;
+                value =
+                  eval_lambda closure.body ~argnames:closure.argnames
+                    ~argvalues:args_eval ~env:rec_env;
                 env;
               }
-          | _ ->
-              { value = eval_lambda body_expr args args_eval scoped_env; env })
+          | None ->
+              {
+                value =
+                  eval_lambda closure.body ~argnames:closure.argnames
+                    ~argvalues:args_eval ~env:closure.env;
+                env;
+              })
       | _ -> raise (Bad_interp "not a function to be applied"))
   | ExprList exprs ->
       let vals = exprs |> List.map ~f:(fun e -> (eval e env).value) in
       { value = ValList vals; env }
 
-and eval_lambda exp arg_names arg_values env =
-  if not (List.length arg_names = List.length arg_values) then
+and eval_lambda exp ~argnames ~argvalues ~env =
+  if not (List.length argnames = List.length argvalues) then
     raise Not_enough_args
   else
-    let arg_assignments = zip_lists arg_names arg_values in
+    let arg_assignments = zip_lists argnames argvalues in
     let lambda_env =
       List.fold
         ~f:(fun acc (arg, v) -> add_to_env acc arg v)
