@@ -26,14 +26,14 @@ let rec value_to_string v =
   | ValBool true -> "#t"
   | ValBool false -> "#f"
   | ValInt i -> string_of_int i
+  | ValPrim _ -> "<prim fn>"
   | ValLambda { name; _ } -> (
       match name with
-      | Some s -> Printf.sprintf "func(%s)" s
-      | None -> "anonfunc")
+      | Some s -> Printf.sprintf "<func %s>" s
+      | None -> "<lambda>")
   | ValList vs ->
       let vss = vs |> List.map ~f:value_to_string |> String.concat ~sep:", " in
       Printf.sprintf "(%s)" vss
-  | _ -> "?"
 
 let eval_primitive (prim : string) : value list -> value =
   match prim with
@@ -160,8 +160,13 @@ let rec eval exp env =
         with Not_found_in_env ->
           raise (Bad_interp ("undefined variable " ^ s))))
   | ExprDef (name, v) ->
-      let v_eval = eval v env in
-      let next_env = add_to_env env name v_eval.value in
+      let v_eval =
+        match (eval v env).value with
+        (* if we see a lambda, give it a name! this is for recursion down the line *)
+        | ValLambda closure -> ValLambda { closure with name = Some name }
+        | _ -> (eval v env).value
+      in
+      let next_env = add_to_env env name v_eval in
       { value = ValUnit; env = next_env }
   | ExprBlock exprs ->
       exprs
